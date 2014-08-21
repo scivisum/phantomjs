@@ -114,12 +114,6 @@ void Phantom::init()
     m_page->setCookieJar(m_defaultCookieJar);
     m_pages.append(m_page);
 
-    // Set up proxy if required
-    QString proxyType = m_config.proxyType();
-    if (proxyType != "none") {
-        setProxy(m_config.proxyHost(), m_config.proxyPort(), proxyType, m_config.proxyAuthUser(), m_config.proxyAuthPass());
-    }
-
     // Set output encoding
     Terminal::instance()->setEncoding(m_config.outputEncoding());
 
@@ -202,6 +196,10 @@ bool Phantom::execute()
             m_returnValue = -1;
             return false;
         }
+
+        if (m_config.debug()) {
+        	m_page->showInspector(m_config.remoteDebugPort());
+        }
     } else if (m_config.scriptFile().isEmpty()) {                       // REPL mode requested
         qDebug() << "Phantom - execute: Starting REPL mode";
 
@@ -236,6 +234,11 @@ bool Phantom::execute()
                 return false;
             }
         }
+    }
+
+    QString proxyType = m_config.proxyType();
+    if (proxyType != "none") {
+    	setProxy(m_config.proxyHost(), m_config.proxyPort(), proxyType, m_config.proxyAuthUser(), m_config.proxyAuthPass());
     }
 
     return !m_terminated;

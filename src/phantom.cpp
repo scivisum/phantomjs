@@ -192,14 +192,9 @@ bool Phantom::execute()
     if (m_config.isWebdriverMode()) {                                   // Remote WebDriver mode requested
         qDebug() << "Phantom - execute: Starting Remote WebDriver mode";
 
-        QString ghostdriver_path = ":/ghostdriver/main.js";
-        if (!m_config.webdriverGhostdriverPath().isEmpty()) {
-          ghostdriver_path = m_config.webdriverGhostdriverPath();
-        }
-
-        if (!Utils::injectJsInFrame(ghostdriver_path, QString(), m_scriptFileEnc, QDir::currentPath(), m_page->mainFrame(), true)) {
-          m_returnValue = -1;
-          return false;
+        if (!Utils::injectJsInFrame(":/ghostdriver/main.js", QString(), m_scriptFileEnc, QDir::currentPath(), m_page->mainFrame(), true)) {
+            m_returnValue = -1;
+            return false;
         }
 
         if (m_config.debug()) {

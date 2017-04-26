@@ -122,6 +122,7 @@ private slots:
 private:
     void prepareSslConfiguration(const Config* config);
     QVariantList getHeadersFromReply(const QNetworkReply* reply);
+    void handleNetworkError(QNetworkReply* reply);
 
     QHash<QNetworkReply*, int> m_ids;
     QSet<QNetworkReply*> m_started;

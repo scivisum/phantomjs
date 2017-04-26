@@ -33,6 +33,7 @@
 #include <QDesktopServices>
 #include <QNetworkDiskCache>
 #include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QSslSocket>
 #include <QSslCertificate>
 #include <QSslCipher>
@@ -365,8 +366,19 @@ QNetworkReply* NetworkAccessManager::createRequest(Operation op, const QNetworkR
     if (!m_localUrlAccessEnabled &&
             (req.url().isLocalFile() || scheme == QLatin1String("qrc"))) {
         reply = new NoFileAccessReply(this, req, op);
+        m_ids[reply] = m_idCounter;
     } else {
         reply = QNetworkAccessManager::createRequest(op, req, outgoingData);
+        m_ids[reply] = m_idCounter;
+        if (reply->isFinished()) {
+            // if it has already finished then it is a sync request,
+            // async requests won't even have started yet.
+            if (reply->errorString().toLatin1().data()) {
+                handleNetworkError(reply);
+            }
+
+            this->handleFinished(reply);
+        }
     }
 
     // reparent jsNetworkRequest to make sure that it will be destroyed with QNetworkReply
@@ -384,8 +396,6 @@ QNetworkReply* NetworkAccessManager::createRequest(Operation op, const QNetworkR
 
         connect(nt, SIGNAL(timeout()), this, SLOT(handleTimeout()));
     }
-
-    m_ids[reply] = m_idCounter;
 
     connect(reply, SIGNAL(readyRead()), this, SLOT(handleStarted()));
     connect(reply, SIGNAL(sslErrors(const QList<QSslError>&)), this, SLOT(handleSslErrors(const QList<QSslError>&)));
@@ -502,20 +512,35 @@ void NetworkAccessManager::handleSslErrors(const QList<QSslError>& errors)
 void NetworkAccessManager::handleNetworkError()
 {
     QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+    handleNetworkError(reply);
+}
+
+void NetworkAccessManager::handleNetworkError(QNetworkReply* reply)
+{
     qDebug() << "Network - Resource request error:"
              << reply->error()
              << "(" << reply->errorString() << ")"
              << "URL:" << reply->url().toEncoded();
 
+    QString errorString = reply->errorString();
+
     QVariantMap data;
     data["id"] = m_ids.value(reply);
     data["url"] = reply->url().toEncoded().data();
     data["errorCode"] = reply->error();
-    data["errorString"] = reply->errorString();
+    data["errorString"] = errorString;
     data["status"] = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
     data["statusText"] = reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute);
 
-    emit resourceError(data);
+    // qt sets a timer on synchronous requests, which we can detect
+    //     (QTimer::singleShot(30*1000, this, SLOT(abortRequest()));)
+    // See: qt/qtbase/src/network/access/qhttpthreaddelegate.cpp
+    //     (QHttpThreadDelegate::startRequestSynchronously)
+    if (errorString == SYNCHRONOUS_REQUEST_TIMEOUT_MESSAGE) {
+        emit resourceTimeout(data);
+    } else {
+        emit resourceError(data);
+    }
 }
 
 QVariantList NetworkAccessManager::getHeadersFromReply(const QNetworkReply* reply)

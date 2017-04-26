@@ -374,7 +374,7 @@ QNetworkReply* NetworkAccessManager::createRequest(Operation op, const QNetworkR
             // if it has already finished then it is a sync request,
             // async requests won't even have started yet.
             if (reply->errorString().toLatin1().data()) {
-                _handleNetworkError(reply);
+                handleNetworkError(reply);
             }
 
             this->handleFinished(reply);
@@ -512,10 +512,10 @@ void NetworkAccessManager::handleSslErrors(const QList<QSslError>& errors)
 void NetworkAccessManager::handleNetworkError()
 {
     QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
-    _handleNetworkError(reply);
+    handleNetworkError(reply);
 }
 
-void NetworkAccessManager::_handleNetworkError(QNetworkReply* reply)
+void NetworkAccessManager::handleNetworkError(QNetworkReply* reply)
 {
     qDebug() << "Network - Resource request error:"
              << reply->error()

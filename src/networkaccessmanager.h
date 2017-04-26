@@ -104,7 +104,6 @@ protected:
     QString m_password;
     QNetworkReply* createRequest(Operation op, const QNetworkRequest& req, QIODevice* outgoingData = 0);
     void handleFinished(QNetworkReply* reply, const QVariant& status, const QVariant& statusText);
-    void _handleNetworkError(QNetworkReply* reply);
 
 signals:
     void resourceRequested(const QVariant& data, QObject*);
@@ -123,6 +122,7 @@ private slots:
 private:
     void prepareSslConfiguration(const Config* config);
     QVariantList getHeadersFromReply(const QNetworkReply* reply);
+    void handleNetworkError(QNetworkReply* reply);
 
     QHash<QNetworkReply*, int> m_ids;
     QSet<QNetworkReply*> m_started;

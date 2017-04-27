@@ -1,0 +1,5 @@
+exclude *
+prune *
+graft svPhantomJS
+include VERSION
+include setup.py

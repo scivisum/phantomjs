@@ -373,7 +373,7 @@ QNetworkReply* NetworkAccessManager::createRequest(Operation op, const QNetworkR
         if (reply->isFinished()) {
             // if it has already finished then it is a sync request,
             // async requests won't even have started yet.
-            if (reply->errorString().toLatin1().data()) {
+            if (reply->error() != QNetworkReply::NoError) {
                 handleNetworkError(reply);
             }
 

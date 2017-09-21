@@ -355,6 +355,7 @@ QNetworkReply* NetworkAccessManager::createRequest(Operation op, const QNetworkR
     data["headers"] = headers;
     if (op == QNetworkAccessManager::PostOperation) { data["postData"] = postData.data(); }
     data["time"] = QDateTime::currentDateTime();
+    data["timestamp"] = QDateTime::currentMSecsSinceEpoch();
 
     JsNetworkRequest jsNetworkRequest(&req, this);
     emit resourceRequested(data, &jsNetworkRequest);
@@ -446,6 +447,7 @@ void NetworkAccessManager::handleStarted()
     data["redirectURL"] = reply->header(QNetworkRequest::LocationHeader);
     data["headers"] = headers;
     data["time"] = QDateTime::currentDateTime();
+    data["timestamp"] = QDateTime::currentMSecsSinceEpoch();
     data["body"] = "";
 
     emit resourceReceived(data);
@@ -489,6 +491,7 @@ void NetworkAccessManager::handleFinished(QNetworkReply* reply, const QVariant& 
     data["redirectURL"] = reply->header(QNetworkRequest::LocationHeader);
     data["headers"] = headers;
     data["time"] = QDateTime::currentDateTime();
+    data["timestamp"] = QDateTime::currentMSecsSinceEpoch();
 
     m_ids.remove(reply);
     m_started.remove(reply);
